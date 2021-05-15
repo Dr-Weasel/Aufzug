@@ -36,6 +36,9 @@ class Stepper:
         self.current_steps = 0
         self.__current_revolutions = 0
         
+#         self.ramp_correction_factor_hi = 1.2 # for 1500 rpm with 800 steps per revolution
+#         self.ramp_correction_factor_lo = 1.06 # for 600 rpm with 800 steps per revolution
+        self.ramp_correction_factor = 1.42 # values of ramp correction are calculated wrongly without this factor
         self.ramp_up = self.calc_ramp(self.freq_lo, self.freq_hi, ramp_up_time)
         self.ramp_dn = self.calc_ramp(self.freq_hi, self.freq_lo, ramp_dn_time)
 
@@ -57,7 +60,7 @@ class Stepper:
 
     def goto(self, revolutions_target):
         """Rotate stepper to the given target of revolutions"""
-        half_period_hi = self.half_period_hi
+        pulse_hi = self.half_period_hi
         pulse_lo = self.half_period_lo
         ramp_up = self.ramp_up
         ramp_dn = self.ramp_dn
@@ -72,16 +75,16 @@ class Stepper:
                 self.execute_ramp(ramp_up)
                 for i in range(abs(steps_without_ramp)):
                     self.stp.value(1)
-                    sleep_us(half_period_hi)
+                    sleep_us(pulse_hi)
                     self.stp.value(0)
-                    sleep_us(half_period_hi)
+                    sleep_us(pulse_hi)
                 self.execute_ramp(ramp_dn)
             else: # not enough steps for higher speed and ramps
                 for i in range(abs(steps)):
                     self.stp.value(1)
-                    sleep_us(self.half_period_lo)
+                    sleep_us(pulse_lo)
                     self.stp.value(0)
-                    sleep_us(self.half_period_lo)
+                    sleep_us(pulse_lo)
     
     def revolutions_to_steps(self, revolutions):
         return int(self.steps_per_rev * revolutions)
@@ -116,11 +119,12 @@ class Stepper:
         m = (freq_end - freq_start) / t_ramp
         b = freq_start
         x = 0
+        correction = self.ramp_correction_factor
         half_period_times = []
         
         while x < t_ramp:
             # calculating half period time in us
-            y = 5e5 / (m * x + b)
+            y = 5e5 / (m * x + b) * correction
             half_period_times.append(int(y))
             x += 2 * y 
         return half_period_times
@@ -146,8 +150,8 @@ if __name__ == "__main__":
     stepper_dir = Pin(3)
     stepper_en = Pin(4)
     # def __init__(self, step_pin, dir_pin, sleep_pin, rpm_hi, rpm_lo, ramp_up_time, ramp_dn_time, steps_per_rev)
-    m1 = Stepper(stepper_pul, stepper_dir, stepper_en, 1000, 50, 2000, 1000, 800)
-    m1.goto(50)
+    m1 = Stepper(stepper_pul, stepper_dir, stepper_en, 4000, 50, 860, 100, 800)
+    m1.goto(35)
     
     
     #m1.steps(9000)
