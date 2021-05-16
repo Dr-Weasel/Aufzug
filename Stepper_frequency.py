@@ -23,8 +23,8 @@ class Stepper:
         self.dir.init(Pin.OUT)
         self.slp.init(Pin.OUT)
 
-        self.turn_right = True
-        self.ramp_down = True
+        self.set_direction()
+        self.ramp_down = False
         
         self.freq_hi = steps_per_rev * rpm_hi / 60  # Hz
         self.freq_lo = steps_per_rev * rpm_lo / 60  # Hz
@@ -34,7 +34,7 @@ class Stepper:
         
 #         self.ramp_correction_factor_hi = 1.2 # for 1500 rpm with 800 steps per revolution
 #         self.ramp_correction_factor_lo = 1.06 # for 600 rpm with 800 steps per revolution
-        self.ramp_correction_factor = 1.06 # values of ramp correction are calculated wrongly without this factor
+        self.ramp_correction_factor = 1.00 # values of ramp correction are calculated wrongly without this factor
         self.ramp_up = self.calc_ramp(self.freq_lo, self.freq_hi, ramp_up_time)
         if self.ramp_down:
             self.ramp_dn = self.calc_ramp(self.freq_hi, self.freq_lo, ramp_dn_time)
@@ -51,7 +51,7 @@ class Stepper:
     
     def set_direction(self, right = True):
         self.turn_right = right
-        self.dir.value = 1
+        self.dir.value(0 if right == True else 1)
 
     def do_revolutions(self, revolutions):
         """Rotate stepper motor for the given number of revolutions"""
@@ -60,7 +60,7 @@ class Stepper:
         performed_steps_const = 0
         performed_steps_dn = 0
         
-        self.turn_right == True if revolutions >= 0 else False
+        self.set_direction(True if revolutions >= 0 else False)
         
         steps = abs(self.revolutions_to_steps(revolutions))
         if self.ramp_dn:
@@ -76,8 +76,8 @@ class Stepper:
                     performed_steps_dn = self.execute_ramp(self.ramp_dn)
             else: # not enough steps for higher speed and ramps
                 performed_steps_const = self.execute_steps(steps, self.half_period_lo)
-            number_of_performed_steps = performed_steps_up + performed_steps_const + performed_steps_dn
-            print(number_of_performed_steps)
+            number_of_performed_steps = (performed_steps_up + performed_steps_const + performed_steps_dn) * (1 if self.turn_right else -1)
+        return number_of_performed_steps
     
     def revolutions_to_steps(self, revolutions):
         return int(self.steps_per_rev * revolutions)
@@ -157,7 +157,7 @@ if __name__ == "__main__":
     stepper_en = Pin(4)
     # def __init__(self, step_pin, dir_pin, sleep_pin, rpm_hi, rpm_lo, ramp_up_time, ramp_dn_time, steps_per_rev)
     m1 = Stepper(stepper_pul, stepper_dir, stepper_en, 600, 50, 1000, 400, 800)
-    m1.do_revolutions(20)
+    print(m1.do_revolutions(-100))
     
     
     #m1.steps(9000)
