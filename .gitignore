@@ -1,0 +1,17 @@
+
+.idea/Dr-Weasel.iml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace.xml
+Brainstorming/PIO/pio_blink.py
+Brainstorming/PIO/Playing_with_stepper_motor_PIO/test_motor1.py
+Brainstorming/PIO/Playing_with_stepper_motor_PIO/test_motor2.py
+Brainstorming/PIO/Playing_with_stepper_motor_PIO/test_motor3.py
+Brainstorming/PIO/Playing_with_stepper_motor_PIO/test_motor4.py
+Brainstorming/PIO_PWM.py
+Brainstorming/Programmable_I_O.py
+encoder_counter_spi.ino
+encoder_counter_spi.py
+test_Stepper.py
