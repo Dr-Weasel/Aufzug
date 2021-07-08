@@ -7,7 +7,7 @@ class Stepper:
 
     def __init__(self, step_pin, dir_pin, sleep_pin, rpm_hi, rpm_lo, ramp_up_time, ramp_dn_time, steps_per_rev):
         """
-        Initialise stepper
+        Initialize stepper
         
         step_pin, dir_pin, sleep_pin: machine.Pin
         rpm_hi, rpm_lo: float
@@ -17,7 +17,7 @@ class Stepper:
         self.stp = step_pin
         self.dir = dir_pin
         self.slp = sleep_pin
-        self.stop = Pin(18, machine.Pin.IN, machine.Pin.PULL_UP)
+        self.stop = Pin(18, Pin.IN, Pin.PULL_UP)
 
         self.stp.init(Pin.OUT)
         self.dir.init(Pin.OUT)
@@ -111,7 +111,8 @@ class Stepper:
         """
         Executes a ramp with a list of period times from freq_start to freq_end
         """
-        for index, period_time in enumerate(period_times):
+        times_list = period_times
+        for index, period_time in enumerate(times_list):
             before_if = ticks_us()
             if self.stop.value() == 0 or self.stop.value() == 0 or self.stop.value() == 0:
                 return index # number of performed steps
@@ -120,6 +121,7 @@ class Stepper:
             sleep_us(1)
             self.stp.value(0)
             sleep_us(period_time + before_if - after_if - 1)
+#             sleep_us(period_time - 1)
         return len(period_times)
     
     def execute_steps(self, steps, period_time):
@@ -141,9 +143,10 @@ if __name__ == "__main__":
     stepper_en = Pin(4)
     # def __init__(self, step_pin, dir_pin, sleep_pin, rpm_hi, rpm_lo, ramp_up_time, ramp_dn_time, steps_per_rev)
     m1 = Stepper(stepper_pul, stepper_dir, stepper_en, 600, 50, 1200, 400, 800)
-    for i in range(10):
-        m1.do_revolutions(4)
-        sleep_ms(50)
-        m1.do_revolutions(-4)
-        sleep_ms(50)
-    
+    for i in range(1):
+#         m1.ramp_up = m1.calc_ramp(m1.freq_lo, m1.freq_hi, 1000)
+        m1.do_revolutions(10)
+        sleep_ms(200)
+        m1.do_revolutions(-10)
+        sleep_ms(200)
+#     m1.do_revolutions(100)

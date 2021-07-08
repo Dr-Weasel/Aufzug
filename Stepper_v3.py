@@ -1,14 +1,10 @@
 """
-Micropython module for stepper motor driven by Easy Driver.
-
-
-!!!This is a test, playing wich PIO for counting the number of driven steps!!!
-
-
+Micropython module for stepper motor
 """
 from machine import Pin
 from utime import sleep_us, sleep_ms, sleep, ticks_us, ticks_ms
 from rp2 import PIO, StateMachine, asm_pio
+from SMFrequency import SMFrequency
 from SMCounter import SMCounter
 
 class Stepper:
@@ -32,8 +28,8 @@ class Stepper:
         self.dir.init(Pin.OUT)
         self.slp.init(Pin.OUT)
         
-        self.sm0 = StateMachine(0, self.frequency, freq = int(1e8), set_base = self.stp)
-        self.counter = SMCounter(smID=1,InputPin=self.stp)
+        self.sm_freq = SMFrequency(smID = 0, OutputPin = self.stp)
+        self.sm_counter = SMCounter(smID = 1, InputPin = self.stp)
 
         self.set_direction()
         self.ramp_down = True
@@ -132,8 +128,7 @@ class Stepper:
             else: # not enough steps for higher speed and ramps
                 performed_steps_const = self.execute_steps(steps, self.period_lo)
             number_of_performed_steps = (performed_steps_up + performed_steps_const + performed_steps_dn) * (1 if self.turn_right else -1)
-            self.sm0.active(0)
-            self.sm0.exec("set(pins,0)")
+            self.sm_freq.active(0)
         return number_of_performed_steps
     
     def revolutions_to_steps(self, revolutions):
@@ -170,11 +165,11 @@ class Stepper:
         """
         times_list = period_times
         first_val = times_list.pop(0)
-        self.sm0.put(first_val)
-        self.sm0.active(1)
+        self.sm_freq.set_period_us(first_val)
+        self.sm_freq.active(1)
         sleep_us(first_val-1)
         for index, period_time in enumerate(times_list):
-            self.sm0.put(period_time)
+            self.sm_freq.set_period_us(period_time)
             before_if = ticks_us()
             if self.stop.value() == 0 or self.stop.value() == 0 or self.stop.value() == 0:
                 return index + 1 # number of performed steps
@@ -183,8 +178,8 @@ class Stepper:
         return len(period_times) + 1
     
     def execute_steps(self, steps, period_time):
-        self.sm0.put(period_time)
-        self.sm0.active(1)
+        self.sm_freq.set_period_us(period_time)
+        self.sm_freq.active(1)
         sleep_us(period_time - 1)
         for i in range(steps - 1):
             before_if = ticks_us()
@@ -201,14 +196,14 @@ if __name__ == "__main__":
     stepper_en = Pin(4)
     # def __init__(self, step_pin, dir_pin, sleep_pin, rpm_hi, rpm_lo, ramp_up_time, ramp_dn_time, steps_per_rev)
     m1 = Stepper(stepper_pul, stepper_dir, stepper_en, 600, 50, 1200, 400, 800)
-    for i in range(1):
+    for i in range(10):
 #         m1.ramp_up = m1.calc_ramp(m1.freq_lo, m1.freq_hi, 1000)
         m1.do_revolutions(10)
-        print(m1.counter.value())
-        m1.counter.reset()
+        print(m1.sm_counter.value())
+        m1.sm_counter.reset()
         sleep_ms(200)
         m1.do_revolutions(-10)
-        print(m1.counter.value())
-        m1.counter.reset()
+        print(m1.sm_counter.value())
+        m1.sm_counter.reset()
         sleep_ms(200)
 #     m1.do_revolutions(100)
